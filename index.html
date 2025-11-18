@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPSA 2026 Conference Schedule</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        .filters {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .filter-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #555;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .session-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .session-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .session-id {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .session-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+        }
+
+        .session-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .meta-item strong {
+            color: #333;
+        }
+
+        .category-badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-top: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.25rem;
+        }
+
+        .person {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+            border-left: 3px solid #ddd;
+        }
+
+        .person-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .person-affiliation {
+            color: #666;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .person-paper {
+            margin-top: 0.25rem;
+            color: #444;
+            font-size: 0.95rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+            font-size: 1.2rem;
+        }
+
+        .results-count {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #667eea;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .session-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎓 SPSA 2026 Conference Schedule</h1>
+        <p class="subtitle">Search and explore conference sessions</p>
+    </header>
+
+    <div class="container">
+        <div class="filters">
+            <div class="filter-grid">
+                <div class="filter-group">
+                    <label for="search">🔍 Search</label>
+                    <input type="text" id="search" placeholder="Search titles, people, topics...">
+                </div>
+
+                <div class="filter-group">
+                    <label for="day-filter">📅 Day</label>
+                    <select id="day-filter">
+                        <option value="">All Days</option>
+                        <option value="thursday">Thursday</option>
+                        <option value="friday">Friday</option>
+                        <option value="saturday">Saturday</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="category-filter">📚 Category</label>
+                    <select id="category-filter">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="time-filter">⏰ Time</label>
+                    <select id="time-filter">
+                        <option value="">All Times</option>
+                        <option value="morning">Morning (Before 12pm)</option>
+                        <option value="afternoon">Afternoon (12pm-5pm)</option>
+                        <option value="evening">Evening (After 5pm)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-count" id="results-count"></div>
+
+        <div id="sessions-container">
+            <div class="loading">Loading schedule data...</div>
+        </div>
+    </div>
+
+    <script>
+        let allSessions = [];
+        let currentFilters = {
+            search: '',
+            day: '',
+            category: '',
+            time: ''
+        };
+
+        // Load schedule data
+        async function loadSchedule() {
+            try {
+                const response = await fetch('schedule_all.json');
+                const data = await response.json();
+
+                // Flatten sessions from all days
+                for (const [day, sessions] of Object.entries(data)) {
+                    sessions.forEach(session => {
+                        session.day = day;
+                        allSessions.push(session);
+                    });
+                }
+
+                // Populate category filter
+                const categories = new Set();
+                allSessions.forEach(session => {
+                    if (session.category) {
+                        categories.add(session.category);
+                    }
+                });
+
+                const categorySelect = document.getElementById('category-filter');
+                Array.from(categories).sort().forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    categorySelect.appendChild(option);
+                });
+
+                displaySessions(allSessions);
+                setupEventListeners();
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+                document.getElementById('sessions-container').innerHTML =
+                    '<div class="no-results">Error loading schedule data. Please try again later.</div>';
+            }
+        }
+
+        // Set up filter event listeners
+        function setupEventListeners() {
+            document.getElementById('search').addEventListener('input', (e) => {
+                currentFilters.search = e.target.value.toLowerCase();
+                filterSessions();
+            });
+
+            document.getElementById('day-filter').addEventListener('change', (e) => {
+                currentFilters.day = e.target.value;
+                filterSessions();
+            });
+
+            document.getElementById('category-filter').addEventListener('change', (e) => {
+                currentFilters.category = e.target.value;
+                filterSessions();
+            });
+
+            document.getElementById('time-filter').addEventListener('change', (e) => {
+                currentFilters.time = e.target.value;
+                filterSessions();
+            });
+        }
+
+        // Filter sessions based on current filters
+        function filterSessions() {
+            let filtered = allSessions.filter(session => {
+                // Search filter
+                if (currentFilters.search) {
+                    const searchText = currentFilters.search;
+                    const sessionText = JSON.stringify(session).toLowerCase();
+                    if (!sessionText.includes(searchText)) {
+                        return false;
+                    }
+                }
+
+                // Day filter
+                if (currentFilters.day && session.day !== currentFilters.day) {
+                    return false;
+                }
+
+                // Category filter
+                if (currentFilters.category && session.category !== currentFilters.category) {
+                    return false;
+                }
+
+                // Time filter
+                if (currentFilters.time && session.day_time) {
+                    const timeMatch = session.day_time.match(/(\d{1,2}):(\d{2})(am|pm)/i);
+                    if (timeMatch) {
+                        let hour = parseInt(timeMatch[1]);
+                        if (timeMatch[3].toLowerCase() === 'pm' && hour !== 12) {
+                            hour += 12;
+                        }
+
+                        if (currentFilters.time === 'morning' && hour >= 12) return false;
+                        if (currentFilters.time === 'afternoon' && (hour < 12 || hour >= 17)) return false;
+                        if (currentFilters.time === 'evening' && hour < 17) return false;
+                    }
+                }
+
+                return true;
+            });
+
+            displaySessions(filtered);
+        }
+
+        // Display sessions
+        function displaySessions(sessions) {
+            const container = document.getElementById('sessions-container');
+            const resultsCount = document.getElementById('results-count');
+
+            resultsCount.textContent = `Showing ${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
+
+            if (sessions.length === 0) {
+                container.innerHTML = '<div class="no-results">No sessions found matching your criteria.</div>';
+                return;
+            }
+
+            container.innerHTML = sessions.map(session => {
+                let html = `
+                    <div class="session-card">
+                        <span class="session-id">Session ${session.id}</span>
+                        ${session.title ? `<h2 class="session-title">${escapeHtml(session.title)}</h2>` : ''}
+
+                        <div class="session-meta">
+                            ${session.day ? `<div class="meta-item"><strong>📅 Day:</strong> ${capitalize(session.day)}</div>` : ''}
+                            ${session.day_time ? `<div class="meta-item"><strong>⏰ Time:</strong> ${escapeHtml(session.day_time)}</div>` : ''}
+                            ${session.location ? `<div class="meta-item"><strong>📍 Location:</strong> ${escapeHtml(session.location)}</div>` : ''}
+                        </div>
+
+                        ${session.category ? `<div><span class="category-badge">${escapeHtml(session.category)}</span></div>` : ''}
+                `;
+
+                if (session.chair && session.chair.length > 0) {
+                    html += '<div class="section"><div class="section-title">Chair</div>';
+                    session.chair.forEach(person => {
+                        html += `
+                            <div class="person">
+                                <div class="person-name">${escapeHtml(person.name)}</div>
+                                ${person.affiliation ? `<div class="person-affiliation">${escapeHtml(person.affiliation)}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                if (session.participants && session.participants.length > 0) {
+                    html += '<div class="section"><div class="section-title">Participants</div>';
+                    session.participants.forEach(person => {
+                        html += `
+                            <div class="person">
+                                <div class="person-name">${escapeHtml(person.name)}</div>
+                                ${person.affiliation ? `<div class="person-affiliation">${escapeHtml(person.affiliation)}</div>` : ''}
+                                ${person.paper ? `<div class="person-paper"><strong>Paper:</strong> ${escapeHtml(person.paper)}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                if (session.discussants && session.discussants.length > 0) {
+                    html += '<div class="section"><div class="section-title">Discussants</div>';
+                    session.discussants.forEach(person => {
+                        html += `
+                            <div class="person">
+                                <div class="person-name">${escapeHtml(person.name)}</div>
+                                ${person.affiliation ? `<div class="person-affiliation">${escapeHtml(person.affiliation)}</div>` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                }
+
+                html += '</div>';
+                return html;
+            }).join('');
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        // Initialize
+        loadSchedule();
+    </script>
+</body>
+</html>
