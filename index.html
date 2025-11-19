@@ -229,23 +229,23 @@
             <div class="filter-grid">
                 <div class="filter-group">
                     <label for="search">🔍 Search</label>
-                    <input type="text" id="search" placeholder="Search titles, people, topics...">
+                    <input type="text" id="search" placeholder="Search session titles, participants, affiliations, paper titles...">
                 </div>
 
                 <div class="filter-group">
                     <label for="day-filter">📅 Day</label>
                     <select id="day-filter">
                         <option value="">All Days</option>
-                        <option value="thursday">Thursday</option>
-                        <option value="friday">Friday</option>
-                        <option value="saturday">Saturday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="category-filter">📚 Category</label>
-                    <select id="category-filter">
-                        <option value="">All Categories</option>
+                    <label for="section-filter">📚 Section</label>
+                    <select id="section-filter">
+                        <option value="">All Sections</option>
                     </select>
                 </div>
 
@@ -273,7 +273,7 @@
         let currentFilters = {
             search: '',
             day: '',
-            category: '',
+            section: '',
             time: ''
         };
 
@@ -281,30 +281,22 @@
         async function loadSchedule() {
             try {
                 const response = await fetch('schedule_all.json');
-                const data = await response.json();
+                allSessions = await response.json();
 
-                // Flatten sessions from all days
-                for (const [day, sessions] of Object.entries(data)) {
-                    sessions.forEach(session => {
-                        session.day = day;
-                        allSessions.push(session);
-                    });
-                }
-
-                // Populate category filter
-                const categories = new Set();
+                // Populate section filter
+                const sections = new Set();
                 allSessions.forEach(session => {
-                    if (session.category) {
-                        categories.add(session.category);
+                    if (session.section) {
+                        sections.add(session.section);
                     }
                 });
 
-                const categorySelect = document.getElementById('category-filter');
-                Array.from(categories).sort().forEach(cat => {
+                const sectionSelect = document.getElementById('section-filter');
+                Array.from(sections).sort().forEach(section => {
                     const option = document.createElement('option');
-                    option.value = cat;
-                    option.textContent = cat;
-                    categorySelect.appendChild(option);
+                    option.value = section;
+                    option.textContent = section;
+                    sectionSelect.appendChild(option);
                 });
 
                 displaySessions(allSessions);
@@ -328,8 +320,8 @@
                 filterSessions();
             });
 
-            document.getElementById('category-filter').addEventListener('change', (e) => {
-                currentFilters.category = e.target.value;
+            document.getElementById('section-filter').addEventListener('change', (e) => {
+                currentFilters.section = e.target.value;
                 filterSessions();
             });
 
@@ -342,11 +334,40 @@
         // Filter sessions based on current filters
         function filterSessions() {
             let filtered = allSessions.filter(session => {
-                // Search filter
+                // Search filter - comprehensive search across all relevant fields
                 if (currentFilters.search) {
                     const searchText = currentFilters.search;
-                    const sessionText = JSON.stringify(session).toLowerCase();
-                    if (!sessionText.includes(searchText)) {
+                    let found = false;
+
+                    // Search in session title
+                    if (session.title && session.title.toLowerCase().includes(searchText)) {
+                        found = true;
+                    }
+
+                    // Search in section
+                    if (session.section && session.section.toLowerCase().includes(searchText)) {
+                        found = true;
+                    }
+
+                    // Search in participants
+                    if (session.participants && session.participants.length > 0) {
+                        session.participants.forEach(participant => {
+                            // Search in participant name
+                            if (participant.name && participant.name.toLowerCase().includes(searchText)) {
+                                found = true;
+                            }
+                            // Search in participant affiliation
+                            if (participant.affiliation && participant.affiliation.toLowerCase().includes(searchText)) {
+                                found = true;
+                            }
+                            // Search in paper title
+                            if (participant.title && participant.title.toLowerCase().includes(searchText)) {
+                                found = true;
+                            }
+                        });
+                    }
+
+                    if (!found) {
                         return false;
                     }
                 }
@@ -356,18 +377,21 @@
                     return false;
                 }
 
-                // Category filter
-                if (currentFilters.category && session.category !== currentFilters.category) {
+                // Section filter
+                if (currentFilters.section && session.section !== currentFilters.section) {
                     return false;
                 }
 
                 // Time filter
-                if (currentFilters.time && session.day_time) {
-                    const timeMatch = session.day_time.match(/(\d{1,2}):(\d{2})(am|pm)/i);
+                if (currentFilters.time && session.start_time) {
+                    const timeMatch = session.start_time.match(/(\d{1,2}):(\d{2})(am|pm)/i);
                     if (timeMatch) {
                         let hour = parseInt(timeMatch[1]);
                         if (timeMatch[3].toLowerCase() === 'pm' && hour !== 12) {
                             hour += 12;
+                        }
+                        if (timeMatch[3].toLowerCase() === 'am' && hour === 12) {
+                            hour = 0;
                         }
 
                         if (currentFilters.time === 'morning' && hour >= 12) return false;
@@ -395,53 +419,31 @@
             }
 
             container.innerHTML = sessions.map(session => {
+                const timeString = session.start_time && session.end_time
+                    ? `${session.start_time} - ${session.end_time}`
+                    : '';
+
                 let html = `
                     <div class="session-card">
                         <span class="session-id">Session ${session.id}</span>
                         ${session.title ? `<h2 class="session-title">${escapeHtml(session.title)}</h2>` : ''}
 
                         <div class="session-meta">
-                            ${session.day ? `<div class="meta-item"><strong>📅 Day:</strong> ${capitalize(session.day)}</div>` : ''}
-                            ${session.day_time ? `<div class="meta-item"><strong>⏰ Time:</strong> ${escapeHtml(session.day_time)}</div>` : ''}
+                            ${session.day ? `<div class="meta-item"><strong>📅 Day:</strong> ${session.day}</div>` : ''}
+                            ${timeString ? `<div class="meta-item"><strong>⏰ Time:</strong> ${escapeHtml(timeString)}</div>` : ''}
                             ${session.location ? `<div class="meta-item"><strong>📍 Location:</strong> ${escapeHtml(session.location)}</div>` : ''}
                         </div>
 
-                        ${session.category ? `<div><span class="category-badge">${escapeHtml(session.category)}</span></div>` : ''}
+                        ${session.section ? `<div><span class="category-badge">${escapeHtml(session.section)}</span></div>` : ''}
                 `;
-
-                if (session.chair && session.chair.length > 0) {
-                    html += '<div class="section"><div class="section-title">Chair</div>';
-                    session.chair.forEach(person => {
-                        html += `
-                            <div class="person">
-                                <div class="person-name">${escapeHtml(person.name)}</div>
-                                ${person.affiliation ? `<div class="person-affiliation">${escapeHtml(person.affiliation)}</div>` : ''}
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                }
 
                 if (session.participants && session.participants.length > 0) {
                     html += '<div class="section"><div class="section-title">Participants</div>';
                     session.participants.forEach(person => {
                         html += `
                             <div class="person">
-                                <div class="person-name">${escapeHtml(person.name)}</div>
-                                ${person.affiliation ? `<div class="person-affiliation">${escapeHtml(person.affiliation)}</div>` : ''}
-                                ${person.paper ? `<div class="person-paper"><strong>Paper:</strong> ${escapeHtml(person.paper)}</div>` : ''}
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                }
-
-                if (session.discussants && session.discussants.length > 0) {
-                    html += '<div class="section"><div class="section-title">Discussants</div>';
-                    session.discussants.forEach(person => {
-                        html += `
-                            <div class="person">
-                                <div class="person-name">${escapeHtml(person.name)}</div>
+                                ${person.title ? `<div class="person-paper"><strong>Paper:</strong> ${escapeHtml(person.title)}</div>` : ''}
+                                ${person.name ? `<div class="person-name">${escapeHtml(person.name)}</div>` : ''}
                                 ${person.affiliation ? `<div class="person-affiliation">${escapeHtml(person.affiliation)}</div>` : ''}
                             </div>
                         `;

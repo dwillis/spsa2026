@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - claude/conference-schedule-parser-01YZBH9TgUrKvRwvcEZAKYtG
+      - claude/searchable-sessions-workflow-01FQrUgziQTMs977MeQxHTj6
       - main
   workflow_dispatch:
 
@@ -33,11 +34,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install PyPDF2
+          pip install pdfplumber
 
-      - name: Parse PDFs and generate JSON
+      - name: Extract sessions and generate JSON
         run: |
-          python3 parse_schedule.py
+          python3 extract_sessions.py
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
